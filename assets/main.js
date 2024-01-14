@@ -4,13 +4,19 @@ const { AppointmentModel, } = require('./appointment-schema')
 const { body, validationResult, check } = require('express-validator');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
-
+const morgan = require('morgan')
+const fs = require('fs')
+const path = require('path')
 
 const docsOptions = require('./docs-option')
 
 const app = express();
 
 app.use(bodyParser.json());
+
+app.use(morgan('common', {
+    stream: fs.createWriteStream(path.join('/var/log/morgan', 'access.log'), { flags: 'a' })
+}))
 
 // Endpoint for creating an appointment
 /**
