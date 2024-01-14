@@ -49,7 +49,7 @@ app.post('/api/appointments',
         try {
             const result = validationResult(req);
 
-            if (!result.isEmpty()) return res.status(400).send({ errorList: result.array(), error: "inputs-problem" });
+            if (!result.isEmpty()) return res.status(400).send({ errorList: result.array(), errorCode: "inputs-problem" });
 
             let { id, start, end } = req.body;
             start = new Date(start)
@@ -57,12 +57,12 @@ app.post('/api/appointments',
 
             if (start < new Date())
                 return res.status(400).json({
-                    message: "Failed to create appointment, this appointment is started sooner than now.", error: "earlier-than-now"
+                    message: "Failed to create appointment, this appointment is started sooner than now.", errorCode: "earlier-than-now"
                 })
 
             if (end - start < 60 * 1000)
                 return res.status(400).json({
-                    message: "Failed to create appointment, this appointment is less than a minute.", error: "Appointment-less-than-a-minute"
+                    message: "Failed to create appointment, this appointment is less than a minute.", errorCode: "Appointment-less-than-a-minute"
                 })
 
             const existingAppointmentsCount = await AppointmentModel.countDocuments({
@@ -74,7 +74,7 @@ app.post('/api/appointments',
 
             if (existingAppointmentsCount > 0)
                 return res.status(400).json({
-                    message: 'Another appointment exists in the same time range or with the same id.', error: "Another-appointment-exists"
+                    message: 'Another appointment exists in the same time range or with the same id.', errorCode: "Another-appointment-exists"
                 });
 
             const newAppointment = new AppointmentModel({ id, start, end });
