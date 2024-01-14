@@ -1,7 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser');
 const { AppointmentModel, } = require('./appointment-schema')
-const { body, validationResult } = require('express-validator');
+const { body, validationResult, check } = require('express-validator');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
@@ -178,6 +178,63 @@ app.put('/api/update-appointment',
         }
     }
 );
+
+// Endpoint for getting appointments
+/**
+ * @swagger
+ * /api/appointments:
+ *   get:
+ *     summary: get appointments
+ *     description: Endpoint to get appointments in range of time
+ *     parameters:
+ *       - in: query
+ *         name: start
+ *         type: date
+ *         required: true
+ *         description: start date
+ *       - in: query
+ *         name: end
+ *         type: string
+ *         format: date-time
+ *         required: true
+ *         description: end date
+ *     responses:
+ *       '200':
+ *         description: Appointment updated successfully
+ */
+app.get('/api/appointments',
+    check('start').isISO8601(),
+    check('end').isISO8601(),
+    async (req, res) => {
+        try {
+            const result = validationResult(req);
+
+            if (!result.isEmpty()) return res.status(400).send({ errorList: result.array(), errorCode: "inputs-problem" });
+
+            if (!req.query.start || !req.query.end) {
+                return req.status(400).json({
+                    error: "need start and end for this request as query.",
+                    errorCode: "no-start-end-query"
+                })
+            }
+            console.log('hello');
+            let start = new Date(req.query.start);
+            let end = new Date(req.query.end);
+
+            const appointments = await AppointmentModel.find({
+                start: { $lte: end },
+                end: { $gte: start }
+            })
+
+            return res.status(200).json({
+                appointments
+            });
+        } catch (error) {
+            res.status(500).json({ message: 'Failed to update appointment', error: error });
+        }
+    }
+);
+
 
 const specs = swaggerJsdoc(docsOptions.options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));

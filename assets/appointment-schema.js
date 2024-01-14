@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const MONGO_URI = 'mongodb://mongo:27017/';
 mongoose
-    .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, maxConnecting:6 })
     .then(() => console.log('MongoDB connected...'))
     .catch(err => console.log(err));
 
@@ -24,7 +24,6 @@ const appointmentSchema = new mongoose.Schema({
 
 appointmentSchema.pre('update', async function (next) {
     try {
-        console.log();
         const appointment = AppointmentModel.findByIdAndUpdate({ _id: 'entityId' }, { updated_at: new Date() });
 
         const appointmentHistory = new AppointmentHistoryModel(
