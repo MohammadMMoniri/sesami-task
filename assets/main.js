@@ -27,7 +27,7 @@ app.use(bodyParser.json());
  *             type: object
  *             properties:
  *               id:
- *                 type: int
+ *                 type: number
  *                 description: id of the appointment
  *               start:
  *                 type: string
@@ -70,7 +70,6 @@ app.post('/api/appointments',
                     start: { $lte: end },
                     end: { $gte: start }
                 }, { id }]
-
             });
 
             if (existingAppointmentsCount > 0)
@@ -87,6 +86,102 @@ app.post('/api/appointments',
             });
         } catch (error) {
             res.status(500).json({ message: 'Failed to create appointment', error: error.message });
+        }
+    }
+);
+
+
+// Endpoint for updating an appointment
+/**
+ * @swagger
+ * /api/update-appointment:
+ *   put:
+ *     summary: update appointment
+ *     description: Endpoint to update an appointment with id
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: number
+ *                 description: id of the appointment
+ *               start:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start time of the appointment
+ *               end:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End time of the appointment
+ *     responses:
+ *       '200':
+ *         description: Appointment updated successfully
+ */
+app.put('/api/update-appointment',
+    body('id').isInt().notEmpty(),
+    body('start').isISO8601().optional(),
+    body('end').isISO8601().optional(),
+    async (req, res) => {
+        try {
+            const result = validationResult(req);
+
+            if (!result.isEmpty()) return res.status(400).send({ errorList: result.array(), errorCode: "inputs-problem" });
+
+            let { id, start, end } = req.body;
+
+            start = start ? new Date(start) : null;
+            end = end ? new Date(end) : null;
+
+            if (!start && !end)
+                return res.status(400).json({
+                    message: "Failed to update appointment, bot start and end time are empty.", errorCode: "start-and-end-empty"
+                })
+
+            const appointment = await AppointmentModel.findOne({ id });
+            console.log(appointment);
+
+            if (!appointment)
+                return res.status(400).json({
+                    message: "Failed to update appointment, there is no appointment with this id to update.", errorCode: "appointment-dose-not-exists"
+                })
+
+            appointment.start = new Date(appointment.start);
+            appointment.end = new Date(appointment.end);
+
+            console.log(appointment.start, appointment.end);
+
+            if (appointment.start < new Date() || appointment.end < new Date())
+                return res.status(400).json({
+                    message: "Failed to update appointment, this appointment is done.", errorCode: "appointment-finished"
+                })
+
+            if ((start || appointment.start) < new Date())
+                return res.status(400).json({
+                    message: "Failed to update appointment, this appointment is started sooner than now.", error: "earlier-than-now"
+                })
+
+            if ((end || appointment.end) - (start || appointment.start) < 60 * 1000)
+                return res.status(400).json({
+                    message: "Failed to update appointment, this appointment is less than a minute.", error: "Appointment-less-than-a-minute"
+                })
+            console.log(end);
+            console.log({
+                start: (start || appointment.start), end: (end || appointment.end)
+            });
+            const newAppointment = await AppointmentModel.findOneAndUpdate({ id }, {
+                start: (start || appointment.start), end: (end || appointment.end)
+            })
+
+            return res.status(200).json({
+                message: 'Appointment updated successfully',
+                appointment: newAppointment
+            });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: 'Failed to update appointment', error: error });
         }
     }
 );
