@@ -217,7 +217,6 @@ app.get('/api/appointments',
                     errorCode: "no-start-end-query"
                 })
             }
-            console.log('hello');
             let start = new Date(req.query.start);
             let end = new Date(req.query.end);
 
@@ -230,7 +229,7 @@ app.get('/api/appointments',
                 appointments
             });
         } catch (error) {
-            res.status(500).json({ message: 'Failed to update appointment', error: error });
+            res.status(500).json({ message: 'Failed to get appointment', error: error });
         }
     }
 );
