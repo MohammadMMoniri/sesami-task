@@ -6,22 +6,38 @@ mongoose
     .then(() => console.log('MongoDB connected...'))
     .catch(err => console.log(err));
 
-const appointmentSchema = new mongoose.Schema({
+
+const appointmentHistorySchema = new mongoose.Schema({
     id: { type: Number, required: true },
     start: { type: Date, required: true },
     end: { type: Date, required: true },
-}, { timestamps: { createdAt: 'created_at' , updatedAt: 'updated_at' }});
+    objectId: { type: String, required: true },
+}, { timestamps: { createdAt: 'created_at' } });
 
-const AppointmentModel = mongoose.model('Appointment', appointmentSchema);
+const AppointmentHistoryModel = mongoose.model('AppointmentHistory', appointmentHistorySchema);
 
-appointmentSchema.pre('save', function (next) {
+const appointmentSchema = new mongoose.Schema({
+    id: { type: Number, required: true, unique: true },
+    start: { type: Date, required: true },
+    end: { type: Date, required: true },
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
+
+appointmentSchema.pre('update', async function (next) {
     try {
-        AppointmentModel.findByIdAndUpdate({ _id: 'entityId' }, { updatedAt: new Date() });
+        console.log();
+        const appointment = AppointmentModel.findByIdAndUpdate({ _id: 'entityId' }, { updated_at: new Date() });
+
+        const appointmentHistory = new AppointmentHistoryModel(
+            { id: this.id, start: this.start, end: this.end, objectId: this._id }
+        )
+        await appointmentHistory.save()
+
     } catch (err) {
         console.log('error pre-save :', err);
     }
 });
 
+const AppointmentModel = mongoose.model('Appointment', appointmentSchema);
 
 module.exports = {
     AppointmentModel, appointmentSchema

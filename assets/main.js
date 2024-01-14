@@ -141,7 +141,6 @@ app.put('/api/update-appointment',
                 })
 
             const appointment = await AppointmentModel.findOne({ id });
-            console.log(appointment);
 
             if (!appointment)
                 return res.status(400).json({
@@ -166,16 +165,15 @@ app.put('/api/update-appointment',
                     message: "Failed to update appointment, this appointment is less than a minute.", error: "Appointment-less-than-a-minute"
                 })
 
-            const newAppointment = await AppointmentModel.findOneAndUpdate({ id }, {
+            await AppointmentModel.findOneAndUpdate({ id }, {
                 start: (start || appointment.start), end: (end || appointment.end)
             })
 
             return res.status(200).json({
                 message: 'Appointment updated successfully',
-                appointment: newAppointment
+                appointment: await AppointmentModel.findOne({ id })
             });
         } catch (error) {
-            console.log(error);
             res.status(500).json({ message: 'Failed to update appointment', error: error });
         }
     }
