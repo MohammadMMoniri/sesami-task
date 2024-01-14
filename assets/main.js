@@ -151,8 +151,6 @@ app.put('/api/update-appointment',
             appointment.start = new Date(appointment.start);
             appointment.end = new Date(appointment.end);
 
-            console.log(appointment.start, appointment.end);
-
             if (appointment.start < new Date() || appointment.end < new Date())
                 return res.status(400).json({
                     message: "Failed to update appointment, this appointment is done.", errorCode: "appointment-finished"
@@ -167,10 +165,7 @@ app.put('/api/update-appointment',
                 return res.status(400).json({
                     message: "Failed to update appointment, this appointment is less than a minute.", error: "Appointment-less-than-a-minute"
                 })
-            console.log(end);
-            console.log({
-                start: (start || appointment.start), end: (end || appointment.end)
-            });
+
             const newAppointment = await AppointmentModel.findOneAndUpdate({ id }, {
                 start: (start || appointment.start), end: (end || appointment.end)
             })

@@ -10,9 +10,17 @@ const appointmentSchema = new mongoose.Schema({
     id: { type: Number, required: true },
     start: { type: Date, required: true },
     end: { type: Date, required: true },
-}, { timestamps: { createdAt: 'created_at' }, updatedAt: 'updated_at' });
+}, { timestamps: { createdAt: 'created_at' , updatedAt: 'updated_at' }});
 
 const AppointmentModel = mongoose.model('Appointment', appointmentSchema);
+
+appointmentSchema.pre('save', function (next) {
+    try {
+        AppointmentModel.findByIdAndUpdate({ _id: 'entityId' }, { updatedAt: new Date() });
+    } catch (err) {
+        console.log('error pre-save :', err);
+    }
+});
 
 
 module.exports = {
